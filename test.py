@@ -1,33 +1,39 @@
 import argparse
 from problem import Problem
-from search import LocalSearchStrategy
+from search import RandomRestartHillClimbing, LocalBeamSearch, SimulatedAnnealing
 
-def main():
-    parser = argparse.ArgumentParser(description='Run local search algorithms.')
-    parser.add_argument('-s', '--strategy', choices=['RRHC', 'SAS', 'LB'], required=True,
-                        help='Choose the search strategy: RRHC for random restart hill climbing, SAS for simulated annealing search, localbeam for local beam search')
-    args = parser.parse_args()
+def schedule(t):
+    return 1/(t + 1)
 
-    # Create a problem instance
-    initial_state = (0, 0)
-    goal_state = (50, 50)
-    problem = Problem(initial_state, goal_state)
+def test_random_restart_hill_climbing():
+    problem = Problem('monalisa.jpg')
+    hill_climber = RandomRestartHillClimbing(problem)
+    path = hill_climber.search()
+    
+    problem.draw_path(path)
 
-    # Execute the chosen search strategy
-    if args.strategy == 'RRHC':
-        num_trials = 10
-        best_path = LocalSearchStrategy.random_restart_hill_climbing(problem, num_trials)
-    elif args.strategy == 'SAS':
-        def schedule(t):
-            return 1 / (t + 1)  # Example cooling schedule
-        best_path = LocalSearchStrategy.simulated_annealing_search(problem, schedule)
-    elif args.strategy == 'LB':
-        k = 1  # Example value for k
-        best_path = LocalSearchStrategy.local_beam_search(problem, k)
+def test_beam_search():
+    problem = Problem('monalisa.jpg')
+    local_beam_search = LocalBeamSearch(problem, 5)
+    path = local_beam_search.local_beam_search(problem, 5)
+    problem.draw_path(path)
 
-    # Visualize the results
-    problem.show()
-    problem.draw_path([best_path])
+def test_simulated_annealing():
+    problem = Problem('monalisa.jpg')
+    simulated_annealing = SimulatedAnnealing(problem)
+    path = simulated_annealing.search()
+    problem.draw_path(path)
 
 if __name__ == "__main__":
-    main()
+    parser = argparse.ArgumentParser(description="Test different local search strategies.")
+    parser.add_argument("-s", "--strategy", choices=["RRHC", "SAS", "LB"], help="Choose a strategy: RRHC, SAS, LB")
+    args = parser.parse_args()
+
+    if args.strategy == "RRHC":
+        test_random_restart_hill_climbing()
+    elif args.strategy == "SAS":
+        test_simulated_annealing()
+    elif args.strategy == "LB":
+        test_beam_search()
+    else:
+        print("Please provide a valid strategy using the -s or --strategy argument.")
